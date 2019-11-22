@@ -1,35 +1,42 @@
-# 安装 TensorFlow
+## test for generate
 
-import tensorflow as tf
+import generate
 import numpy as np
-import cv2
+import tensorflow as tf
 
-mnist = tf.keras.datasets.fashion_mnist
+num = 200
+modelPath = r'./models/model.ht'
+trained_model = tf.keras.models.load_model(modelPath)
+labels = np.load('./data/test_labels.npy')
+images = np.load('./data/test_data.npy')
+images = np.reshape(images,(10000,28,28,1))
+shape = images.shape
 
-text_labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
-                           'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
 
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train, x_test = x_train / 255.0, x_test / 255.0
-for i in y_test[0:32]:
-  print(text_labels[i])
+images = images[0:num]
 
-imgs = np.hstack(x_test[0:32])
-cv2.imshow("xtrain",imgs)
-cv2.waitKey(0)
+shape = images.shape
 
-# Sequential序列化模型
-model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(28, 28)),# Flatten层用于将数据转化为一维数据 input_shape输入的尺寸
-  tf.keras.layers.Dense(128, activation='softplus'),# 定义层，128个神经元，激活函数为relu
-  tf.keras.layers.Dropout(0.2),# Dropout将在训练过程中每次更新参数时按一定概率（rate）随机断开输入神经元，用于防止过拟合。
-  tf.keras.layers.Dense(10, activation='softmax')
-])
+# attack_images = generateT.generate(images,shape)
+attack_images = generate.generate(images,shape)
+attack_images = tf.convert_to_tensor(attack_images)
 
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
+attack_images = tf.reshape(attack_images,(num,28,28,1))
+images = tf.reshape(images,(num,28,28,1))
 
-model.fit(x_train, y_train, epochs=5)
+predicts = trained_model.predict(attack_images)
+predict_types = tf.argmax(predicts,1)
+count = 0
+for i in range(shape[0]):
+    if predict_types[i]!=labels[i]:
+        count += 1
+print('攻击成功率：'+str(count/num*100)+'%')
 
-model.evaluate(x_test,  y_test, verbose=2)
+
+tfSSIM = tf.image.ssim(images,attack_images,1.0)
+
+ssimlist = tfSSIM.numpy()
+meanssim = np.mean(ssimlist)
+print("ssim:",meanssim)
+print("score:",count*meanssim/num)
+
