@@ -8,8 +8,8 @@ mnist = tf.keras.datasets.fashion_mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train, x_test = x_train / 255.0, x_test / 255.0
 
-x_test = np.reshape(x_test,(10000,28,28,1))
-np.save('test_data.npy',x_test)
+# x_test = np.reshape(x_test,(10000,28,28,1))
+# np.save('test_data.npy',x_test)
 # np.save('./data/test_labels.npy',y_test)
 
 # alist = [x_test[19],x_test[2],x_test[1],x_test[13],x_test[6],x_test[8],x_test[4],x_test[9],x_test[18],x_test[0]]
